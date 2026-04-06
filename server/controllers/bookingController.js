@@ -250,24 +250,26 @@ export const sendPickupOTP = async (req, res) => {
       return res.json({ success: false, message: "Booking not found" });
     }
 
-    const otp = Math.floor(1000 + Math.random() * 9000);
+     const otp = Math.floor(100000 + Math.random() * 900000);
 
     booking.pickupOTP = otp;
     await booking.save();
 
     // ✅ SEND EMAIL TO ADMIN
     const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+  host: "smtp-relay.brevo.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
 
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: booking.owner.email,   // 🔥 ADMIN EMAIL
-      subject: "Car Pickup OTP",
+  from: `"Car Rental" <${process.env.SMTP_USER}>`,
+  to: booking.owner.email,
+  subject: "Car Pickup OTP",
       html: `
         <h2>Car Pickup OTP</h2>
         <p>User: ${booking.user.name}</p>
@@ -346,22 +348,25 @@ export const sendReturnOTP = async (req, res) => {
       .populate("user")
       .populate("car");
 
-    const otp = Math.floor(1000 + Math.random() * 9000);
+     const otp = Math.floor(100000 + Math.random() * 900000);
 
     booking.returnOTP = otp;
     await booking.save();
 
     // 📩 EMAIL TO ADMIN
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: "smtp-relay.brevo.com",
+      port: 587,
+      secure: false,
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
       },
     });
 
-    await transporter.sendMail({
-      to: booking.owner.email,
+       await transporter.sendMail({
+      from: `"Car Rental" <${process.env.SMTP_USER}>`,
+      to: booking.owner.email, // admin gets OTP
       subject: "Car Return OTP",
       html: `
         <h2>Return OTP</h2>
