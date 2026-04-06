@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
-import { useAppContext } from "../context/AppContext"
+import { AppContext, useAppContext } from "../context/AppContext"
 
 import CarMap from "../components/Map"
 import toast from "react-hot-toast"
@@ -13,6 +13,7 @@ const [otp, setOtp] = useState("");
 const [otpTimer, setOtpTimer] = useState(30);
 const [canResend, setCanResend] = useState(false);
 const [otpTrigger, setOtpTrigger] = useState(0);
+const {axios} =AppContext()
 const [returnTimer, setReturnTimer] = useState(30);
 const [canResendReturn, setCanResendReturn] = useState(false);
 const [showReturnOtp, setShowReturnOtp] = useState(false);
