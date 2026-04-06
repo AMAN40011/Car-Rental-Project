@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import { useAppContext } from "../context/AppContext"
-import axios from "axios"
+
 import CarMap from "../components/Map"
 import toast from "react-hot-toast"
 const BookingDetails = () => {
@@ -16,13 +16,15 @@ const [otpTrigger, setOtpTrigger] = useState(0);
 const [returnTimer, setReturnTimer] = useState(30);
 const [canResendReturn, setCanResendReturn] = useState(false);
 const [showReturnOtp, setShowReturnOtp] = useState(false);
+const { axios } = useAppContext();
 const [sendingOtp, setSendingOtp] = useState(false);
 const [returnOtp, setReturnOtp] = useState("");
 const [returnTrigger, setReturnTrigger] = useState(0);
   const [booking, setBooking] = useState(null)
 const [timeLeft, setTimeLeft] = useState("");
 const handleTakeCar = async () => {
-  if (sendingOtp) return;   // 🔥 PREVENT DOUBLE CLICK
+  if (sendingOtp) return;  
+   console.log("CLICKED TAKE CAR");  // 🔥 PREVENT DOUBLE CLICK
 
   try {
     setSendingOtp(true);
