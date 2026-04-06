@@ -1,48 +1,39 @@
-import nodemailer from "nodemailer";
+import axios from "axios";
 
-const transporter = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false
-  }
-});
-
-// ✅ COMMON EMAIL FUNCTION (used for OTP, reset password)
 export const sendEmail = async (email, subject, html) => {
   try {
-    if (!email) {
-      console.log("❌ No email provided");
-      throw new Error("Email is undefined");
-    }
-
     console.log("📩 Sending email to:", email);
-    console.log("SMTP_USER:", process.env.SMTP_USER);
 
-    const info = await transporter.sendMail({
-      from: `"Car Rental" <${process.env.SMTP_USER}>`,
-      to: email,
-      subject,
-      html
-    });
+    const res = await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      {
+        sender: {
+          name: "Car Rental",
+          email: process.env.SENDER_EMAIL,
+        },
+        to: [{ email }],
+        subject,
+        htmlContent: html,
+      },
+      {
+        headers: {
+          "api-key": process.env.BREVO_API_KEY,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    console.log("✅ Email sent:", info.messageId);
+    console.log("✅ Email sent via API");
 
-    return true; // ✅ IMPORTANT
+    return true;
 
   } catch (error) {
-    console.error("❌ FULL EMAIL ERROR:", error); // ✅ FULL ERROR
-
-    throw error; // ✅ VERY IMPORTANT (don’t hide error)
+    console.error("❌ API EMAIL ERROR:", error.response?.data || error.message);
+    throw error;
   }
 };
 
-// ✅ BOOKING EMAIL (optional wrapper)
+// wrapper (keep same)
 export const sendBookingEmail = async (email, subject, html) => {
   return await sendEmail(email, subject, html);
 };
