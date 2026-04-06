@@ -267,7 +267,7 @@ export const sendPickupOTP = async (req, res) => {
   },
 });
  
-    try { transporter.sendMail({
+    try { await transporter.sendMail({
   from: `"Car Rental" <${process.env.SMTP_USER}>`,
   to: booking.owner.email,
   subject: "Car Pickup OTP",
@@ -277,8 +277,11 @@ export const sendPickupOTP = async (req, res) => {
         <p>Car: ${booking.car.brand} ${booking.car.model}</p>
         <h1 style="color:green;">OTP: ${otp}</h1>
       `,
-    }).then(() => console.log("EMAIL SENT"))
-  .catch(err => console.log("EMAIL ERROR:", err.message));
+    });
+     console.log("✅ EMAIL SENT SUCCESS");
+
+  return res.json({ success: true });
+
 
 } catch (err) {
   console.log("MAIL FAIL:", err.message);
@@ -349,6 +352,7 @@ export const returnCar = async (req, res) => {
 };
 export const sendReturnOTP = async (req, res) => {
   try {
+
     const booking = await Booking.findById(req.params.id)
       .populate("owner")
       .populate("user")
@@ -370,7 +374,7 @@ export const sendReturnOTP = async (req, res) => {
       },
     });
 
-     try {  transporter.sendMail({
+     try { await  transporter.sendMail({
       from: `"Car Rental" <${process.env.SMTP_USER}>`,
       to: booking.owner.email, // admin gets OTP
       subject: "Car Return OTP",
@@ -380,8 +384,9 @@ export const sendReturnOTP = async (req, res) => {
         <p>Car: ${booking.car.brand}</p>
         <h1>${otp}</h1>
       `,
-    }).then(() => console.log("EMAIL SENT"))
-  .catch(err => console.log("EMAIL ERROR:", err.message));
+    });
+     console.log("✅ EMAIL SENT SUCCESS");
+     return res.json({ success: true });
 
 } catch (err) {
   console.log("MAIL FAIL:", err.message);
