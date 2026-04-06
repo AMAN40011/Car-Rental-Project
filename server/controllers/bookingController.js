@@ -1,8 +1,7 @@
 import Booking from "../models/Booking.js"
 import Car from "../models/Car.js";
 import { sendBookingEmail } from "../configs/utils/sendEmail.js";
-import nodemailer from "nodemailer"; 
-import User from "../models/User.js";
+
 
 
 //Function to Check Availabillity of Car for a given Date
@@ -257,46 +256,25 @@ export const sendPickupOTP = async (req, res) => {
     booking.pickupOTP = otp;
     await booking.save();
      
-    // ✅ SEND EMAIL TO ADMIN
-    const transporter = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
-
+    
  
-    try {
-      const owner = await User.findById(booking.owner);
+    const ownerEmail = booking.owner.email;
 
-console.log("OWNER EMAIL:", owner.email);
-  await transporter.sendMail({
-    from: `"Car Rental" <${process.env.SMTP_USER}>`,
-    to: booking.owner.email,
-    subject: "Car Pickup OTP",
-    html: `
-      <h2>Car Pickup OTP</h2>
-      <p>User: ${booking.user.name}</p>
-      <p>Car: ${booking.car.brand} ${booking.car.model}</p>
-      <h1 style="color:green;">OTP: ${otp}</h1>
-    `,
-    
-  });
+console.log("OWNER EMAIL:", ownerEmail);
 
-  console.log("✅ EMAIL SENT");
+await sendBookingEmail(
+  ownerEmail,
+  "Car Pickup OTP",
+  `
+    <h2>Car Pickup OTP</h2>
+    <p>User: ${booking.user.name}</p>
+    <p>Car: ${booking.car.brand} ${booking.car.model}</p>
+    <h1 style="color:green;">OTP: ${otp}</h1>
+  `
+);
 
-  return res.json({ success: true }); // ✅ AFTER email
+return res.json({ success: true });
 
-} catch (err) {
-  console.log("❌ EMAIL ERROR:", err.message);
-
-  return res.json({ success: false, message: "Email failed" });
-}
-
-    
   } catch (error) {
     res.json({ success: false, message: error.message });
   }
@@ -379,35 +357,23 @@ export const sendReturnOTP = async (req, res) => {
 
     console.log("Sending OTP to:", booking.owner.email);
 
-    // 🔥 Create transporter
-    const transporter = nodemailer.createTransport({
-      host: "smtp-relay.brevo.com",
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
+    
+   const ownerEmail = booking.owner.email;
 
-    // ✅ SEND EMAIL FIRST (IMPORTANT)
-    await transporter.sendMail({
-      from: `"Car Rental" <${process.env.SMTP_USER}>`,
-      to: booking.owner.email,
-      subject: "Car Return OTP",
-      html: `
-        <h2>Return OTP</h2>
-        <p>User: ${booking.user.name}</p>
-        <p>Car: ${booking.car.brand} ${booking.car.model}</p>
-        <h1 style="color:red;">OTP: ${otp}</h1>
-      `,
-    });
+console.log("RETURN OTP EMAIL:", ownerEmail);
 
-    console.log("✅ RETURN OTP EMAIL SENT");
+await sendBookingEmail(
+  ownerEmail,
+  "Car Return OTP",
+  `
+    <h2>Return OTP</h2>
+    <p>User: ${booking.user.name}</p>
+    <p>Car: ${booking.car.brand} ${booking.car.model}</p>
+    <h1 style="color:red;">OTP: ${otp}</h1>
+  `
+);
 
-    // ✅ SEND RESPONSE AFTER EMAIL
-    return res.json({ success: true });
-
+return res.json({ success: true });
   } catch (error) {
     console.log("❌ RETURN OTP ERROR:", error.message);
     return res.json({ success: false, message: error.message });
