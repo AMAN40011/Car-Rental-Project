@@ -269,22 +269,27 @@ export const sendPickupOTP = async (req, res) => {
 });
 
  
-    try { await transporter.sendMail({
-  from: `"Car Rental" <${process.env.SMTP_USER}>`,
-  to: booking.owner.email,
-  subject: "Car Pickup OTP",
-      html: `
-        <h2>Car Pickup OTP</h2>
-        <p>User: ${booking.user.name}</p>
-        <p>Car: ${booking.car.brand} ${booking.car.model}</p>
-        <h1 style="color:green;">OTP: ${otp}</h1>
-      `,
-    }).then(() => console.log("EMAIL SENT"))
-  .catch(err => console.log("EMAIL ERROR:", err.message));
-res.json({ success: true });
+    try {
+  await transporter.sendMail({
+    from: `"Car Rental" <${process.env.SMTP_USER}>`,
+    to: booking.owner.email,
+    subject: "Car Pickup OTP",
+    html: `
+      <h2>Car Pickup OTP</h2>
+      <p>User: ${booking.user.name}</p>
+      <p>Car: ${booking.car.brand} ${booking.car.model}</p>
+      <h1 style="color:green;">OTP: ${otp}</h1>
+    `,
+  });
+
+  console.log("✅ EMAIL SENT");
+
+  return res.json({ success: true }); // ✅ AFTER email
 
 } catch (err) {
-  console.log("MAIL FAIL:", err.message);
+  console.log("❌ EMAIL ERROR:", err.message);
+
+  return res.json({ success: false, message: "Email failed" });
 }
 
     
@@ -351,17 +356,26 @@ export const returnCar = async (req, res) => {
 };
 export const sendReturnOTP = async (req, res) => {
   try {
+    console.log("SEND RETURN OTP API HIT");
+
     const booking = await Booking.findById(req.params.id)
       .populate("owner")
       .populate("user")
       .populate("car");
 
-     const otp = Math.floor(100000 + Math.random() * 900000);
+    if (!booking) {
+      return res.json({ success: false, message: "Booking not found" });
+    }
+
+    // 🔥 Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000);
 
     booking.returnOTP = otp;
     await booking.save();
 
-    // 📩 EMAIL TO ADMIN
+    console.log("Sending OTP to:", booking.owner.email);
+
+    // 🔥 Create transporter
     const transporter = nodemailer.createTransport({
       host: "smtp-relay.brevo.com",
       port: 587,
@@ -371,29 +385,28 @@ export const sendReturnOTP = async (req, res) => {
         pass: process.env.SMTP_PASS,
       },
     });
- 
-     try {  transporter.sendMail({
+
+    // ✅ SEND EMAIL FIRST (IMPORTANT)
+    await transporter.sendMail({
       from: `"Car Rental" <${process.env.SMTP_USER}>`,
-      to: booking.owner.email, // admin gets OTP
+      to: booking.owner.email,
       subject: "Car Return OTP",
       html: `
         <h2>Return OTP</h2>
         <p>User: ${booking.user.name}</p>
-        <p>Car: ${booking.car.brand}</p>
-        <h1>${otp}</h1>
+        <p>Car: ${booking.car.brand} ${booking.car.model}</p>
+        <h1 style="color:red;">OTP: ${otp}</h1>
       `,
-    }).then(() => console.log("EMAIL SENT"))
-  .catch(err => console.log("EMAIL ERROR:", err.message));
-  res.json({ success: true });
+    });
 
+    console.log("✅ RETURN OTP EMAIL SENT");
 
-} catch (err) {
-  console.log("MAIL FAIL:", err.message);
-}
+    // ✅ SEND RESPONSE AFTER EMAIL
+    return res.json({ success: true });
 
-   
   } catch (error) {
-    res.json({ success: false });
+    console.log("❌ RETURN OTP ERROR:", error.message);
+    return res.json({ success: false, message: error.message });
   }
 };
 export const verifyReturnOTP = async (req, res) => {
