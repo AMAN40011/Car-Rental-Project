@@ -266,6 +266,8 @@ export const sendPickupOTP = async (req, res) => {
     pass: process.env.SMTP_PASS,
   },
 });
+res.json({ success: true });
+
  
     try { await transporter.sendMail({
   from: `"Car Rental" <${process.env.SMTP_USER}>`,
@@ -277,18 +279,14 @@ export const sendPickupOTP = async (req, res) => {
         <p>Car: ${booking.car.brand} ${booking.car.model}</p>
         <h1 style="color:green;">OTP: ${otp}</h1>
       `,
-    });
-     console.log("✅ EMAIL SENT SUCCESS");
-
-  return res.json({ success: true });
-
+    }).then(() => console.log("EMAIL SENT"))
+  .catch(err => console.log("EMAIL ERROR:", err.message));
 
 } catch (err) {
   console.log("MAIL FAIL:", err.message);
 }
 
-    res.json({ success: true });
-
+    
   } catch (error) {
     res.json({ success: false, message: error.message });
   }
@@ -352,7 +350,6 @@ export const returnCar = async (req, res) => {
 };
 export const sendReturnOTP = async (req, res) => {
   try {
-
     const booking = await Booking.findById(req.params.id)
       .populate("owner")
       .populate("user")
@@ -373,8 +370,9 @@ export const sendReturnOTP = async (req, res) => {
         pass: process.env.SMTP_PASS,
       },
     });
+ res.json({ success: true });
 
-     try { await  transporter.sendMail({
+     try {  transporter.sendMail({
       from: `"Car Rental" <${process.env.SMTP_USER}>`,
       to: booking.owner.email, // admin gets OTP
       subject: "Car Return OTP",
@@ -384,16 +382,14 @@ export const sendReturnOTP = async (req, res) => {
         <p>Car: ${booking.car.brand}</p>
         <h1>${otp}</h1>
       `,
-    });
-     console.log("✅ EMAIL SENT SUCCESS");
-     return res.json({ success: true });
+    }).then(() => console.log("EMAIL SENT"))
+  .catch(err => console.log("EMAIL ERROR:", err.message));
 
 } catch (err) {
   console.log("MAIL FAIL:", err.message);
 }
 
-    res.json({ success: true });
-
+   
   } catch (error) {
     res.json({ success: false });
   }
