@@ -30,3 +30,33 @@ export const sendEmail = async (email, subject, html) => {
 export const sendBookingEmail = async (email, subject, html) => {
   return sendEmail(email, subject, html);
 };
+// FORGOT PASSWORD
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.json({ success: false, message: "User not found" });
+    }
+
+    const otp = otpGenerator.generate(6, {
+      digits: true,
+      upperCaseAlphabets: false,
+      specialChars: false,
+    });
+
+    user.resetToken = otp;
+    user.resetTokenExpiry = Date.now() + 10 * 60 * 1000;
+
+    await user.save();
+
+    await sendEmail(email, "Reset Password OTP", `Your OTP is ${otp}`);
+
+    res.json({ success: true, message: "OTP sent" });
+
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
