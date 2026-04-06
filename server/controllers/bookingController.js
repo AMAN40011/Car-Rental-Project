@@ -240,6 +240,7 @@ export const getSingleBooking = async (req, res) => {
   }
 };
 export const sendPickupOTP = async (req, res) => {
+  console.log("SEND PICKUP OTP API HIT");
   try {
     console.log("SEND PICKUP OTP API HIT");
     const booking = await Booking.findById(req.params.id)
