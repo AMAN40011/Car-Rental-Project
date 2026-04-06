@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 
-export const sendEmail = async (to, subject, html) => {
+export const sendBookingEmail = async (email, subject, html) => {
+  
   try {
     const transporter = nodemailer.createTransport({
       host: "smtp-relay.brevo.com",
