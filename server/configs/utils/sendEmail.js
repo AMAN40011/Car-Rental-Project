@@ -8,9 +8,9 @@ export const sendEmail = async (email, subject, html) => {
       "https://api.brevo.com/v3/smtp/email",
       {
         sender: {
-  name: "Car Rental",
-  email: "amanpal142005@gmail.com", // 🔥 TEMP HARDCODE
-},
+          name: "Car Rental",
+          email: process.env.SENDER_EMAIL,
+        },
         to: [{ email }],
         subject,
         htmlContent: html,
