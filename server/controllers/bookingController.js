@@ -240,7 +240,7 @@ export const getSingleBooking = async (req, res) => {
   }
 };
 export const sendPickupOTP = async (req, res) => {
-  console.log("SEND PICKUP OTP API HIT");
+  
   try {
     console.log("SEND PICKUP OTP API HIT");
     const booking = await Booking.findById(req.params.id)
@@ -267,7 +267,6 @@ export const sendPickupOTP = async (req, res) => {
     pass: process.env.SMTP_PASS,
   },
 });
-res.json({ success: true });
 
  
     try { await transporter.sendMail({
@@ -282,6 +281,7 @@ res.json({ success: true });
       `,
     }).then(() => console.log("EMAIL SENT"))
   .catch(err => console.log("EMAIL ERROR:", err.message));
+res.json({ success: true });
 
 } catch (err) {
   console.log("MAIL FAIL:", err.message);
@@ -371,8 +371,7 @@ export const sendReturnOTP = async (req, res) => {
         pass: process.env.SMTP_PASS,
       },
     });
- res.json({ success: true });
-
+ 
      try {  transporter.sendMail({
       from: `"Car Rental" <${process.env.SMTP_USER}>`,
       to: booking.owner.email, // admin gets OTP
@@ -385,6 +384,8 @@ export const sendReturnOTP = async (req, res) => {
       `,
     }).then(() => console.log("EMAIL SENT"))
   .catch(err => console.log("EMAIL ERROR:", err.message));
+  res.json({ success: true });
+
 
 } catch (err) {
   console.log("MAIL FAIL:", err.message);

@@ -9,7 +9,6 @@ const BookingDetails = () => {
   const { currency } = useAppContext()
   const [sendingReturnOtp, setSendingReturnOtp] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
-  const { axios } = useAppContext();
 const [otp, setOtp] = useState("");
 const [otpTimer, setOtpTimer] = useState(30);
 const [canResend, setCanResend] = useState(false);
@@ -17,29 +16,28 @@ const [otpTrigger, setOtpTrigger] = useState(0);
 const [returnTimer, setReturnTimer] = useState(30);
 const [canResendReturn, setCanResendReturn] = useState(false);
 const [showReturnOtp, setShowReturnOtp] = useState(false);
-
 const [sendingOtp, setSendingOtp] = useState(false);
 const [returnOtp, setReturnOtp] = useState("");
 const [returnTrigger, setReturnTrigger] = useState(0);
   const [booking, setBooking] = useState(null)
 const [timeLeft, setTimeLeft] = useState("");
 const handleTakeCar = async () => {
-  console.log("CLICKED");
+  if (sendingOtp) return;   // 🔥 PREVENT DOUBLE CLICK
 
   try {
-    console.log("API CALL START");
+    setSendingOtp(true);
 
-    const res = await axios.post(
-      `/api/bookings/send-otp/${booking._id}`
-    );
-
-    console.log("API RESPONSE:", res);
-
-    toast.success("OTP sent");
-
+    await axios.post(`/api/bookings/send-otp/${booking._id}`);
+    
+    toast.success("OTP sent to admin 📩");
+   setShowOtp(true);
+setOtpTimer(30);
+setCanResend(false);
+setOtpTrigger(prev => prev + 1); 
   } catch (err) {
-    console.log("API ERROR:", err);
     toast.error("Error sending OTP");
+  } finally {
+    setSendingOtp(false);
   }
 };
 const handleReturnCar = async () => {
