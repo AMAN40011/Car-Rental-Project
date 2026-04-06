@@ -2,7 +2,7 @@ import Booking from "../models/Booking.js"
 import Car from "../models/Car.js";
 import { sendBookingEmail } from "../configs/utils/sendEmail.js";
 import nodemailer from "nodemailer"; 
-
+import User from "../models/User.js";
 
 
 //Function to Check Availabillity of Car for a given Date
@@ -256,7 +256,7 @@ export const sendPickupOTP = async (req, res) => {
 
     booking.pickupOTP = otp;
     await booking.save();
-
+     
     // ✅ SEND EMAIL TO ADMIN
     const transporter = nodemailer.createTransport({
   host: "smtp-relay.brevo.com",
@@ -270,6 +270,9 @@ export const sendPickupOTP = async (req, res) => {
 
  
     try {
+      const owner = await User.findById(booking.owner);
+
+console.log("OWNER EMAIL:", owner.email);
   await transporter.sendMail({
     from: `"Car Rental" <${process.env.SMTP_USER}>`,
     to: booking.owner.email,
@@ -280,6 +283,7 @@ export const sendPickupOTP = async (req, res) => {
       <p>Car: ${booking.car.brand} ${booking.car.model}</p>
       <h1 style="color:green;">OTP: ${otp}</h1>
     `,
+    
   });
 
   console.log("✅ EMAIL SENT");
