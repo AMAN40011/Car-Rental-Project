@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import { useAppContext } from "../context/AppContext"
-import axios from "axios";
+
 import CarMap from "../components/Map"
 import toast from "react-hot-toast"
 const BookingDetails = () => {
@@ -9,6 +9,7 @@ const BookingDetails = () => {
   const { currency } = useAppContext()
   const [sendingReturnOtp, setSendingReturnOtp] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
+  const { axios } = useAppContext();
 const [otp, setOtp] = useState("");
 const [otpTimer, setOtpTimer] = useState(30);
 const [canResend, setCanResend] = useState(false);
