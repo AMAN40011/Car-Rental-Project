@@ -1,3 +1,5 @@
+import axios from "axios";
+
 export const sendEmail = async (email, subject, html) => {
   try {
     console.log("📩 Sending email to:", email);
@@ -21,13 +23,17 @@ export const sendEmail = async (email, subject, html) => {
       }
     );
 
-    // 🔥 MOST IMPORTANT LINE
-    console.log("✅ BREVO RESPONSE:", res.data);
+    console.log("✅ Email sent via API");
 
     return true;
 
   } catch (error) {
-    console.error("❌ BREVO ERROR:", error.response?.data || error.message);
+    console.error("❌ API EMAIL ERROR:", error.response?.data || error.message);
     throw error;
   }
+};
+
+// wrapper (keep same)
+export const sendBookingEmail = async (email, subject, html) => {
+  return await sendEmail(email, subject, html);
 };
