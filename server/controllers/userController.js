@@ -66,7 +66,7 @@ export const registerUser = async (req, res) => {
     // 🔥 Send email
     
     try {
-  await sendEmail(
+   sendEmail(
     email,
   "🔐 Verify Your Account - Car Rental",
   `
