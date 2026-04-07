@@ -111,6 +111,24 @@ export const createBooking = async (req, res) => {
       message: "Proceed to Payment",
       booking: newBooking
     });
+    // ✅ populate booking data for email
+const bookingData = await Booking.findById(newBooking._id)
+  .populate("car")
+  .populate("user");
+
+// ✅ send booking confirmation email
+await sendBookingEmail(
+  bookingData.user.email,
+  "🚗 Booking Confirmed - Car Rental",
+  `
+    <h2>Booking Confirmed</h2>
+    <p>Car: ${bookingData.car.brand} ${bookingData.car.model}</p>
+    <p>Location: ${bookingData.car.location}</p>
+    <p>Pickup: ${new Date(bookingData.pickupDate).toDateString()}</p>
+    <p>Return: ${new Date(bookingData.returnDate).toDateString()}</p>
+    <p>Total Price: ₹${bookingData.price}</p>
+  `
+);
 
   } catch (error) {
     console.log(error.message);
