@@ -1,6 +1,4 @@
-console.log("Booking route mounted");
 import dotenv from "dotenv";
-dotenv.config();
 import express from 'express';
 import "dotenv/config";
 import cors from "cors";
@@ -11,8 +9,10 @@ import bookingRouter from './routes/bookingRoutes.js';
 import reviewRoutes from "./routes/reviewRoutes.js";
 
 //pal617362_db_user123
+
 //Initialize Express App
 const app=express()
+dotenv.config();
 //Connect DataBase
 connectDB()
   .then(() => {

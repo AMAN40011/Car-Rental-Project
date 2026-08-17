@@ -1,17 +1,17 @@
-import User from "../models/User.js"
-import bcrypt from 'bcrypt'
-import jwt from 'jsonwebtoken'
-import Car from '../models/Car.js';
+import User from "../models/User.js";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import Car from "../models/Car.js";
 import otpGenerator from "otp-generator";
 import { sendEmail } from "../configs/utils/sendEmail.js";
 import crypto from "crypto";
 //Generate JWT Token
-const generateToken=(userId)=>{
-   const payload = { id: userId };
-    return jwt.sign(payload, process.env.JWT_SECRET, {
-  expiresIn: "7d"
-});
-}
+const generateToken = (userId) => {
+  const payload = { id: userId };
+  return jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: "7d",
+  });
+};
 export const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -21,38 +21,38 @@ export const registerUser = async (req, res) => {
     }
 
     const userExists = await User.findOne({ email });
-   if (userExists) {
-  if (!userExists.isVerified) {
+    if (userExists) {
+      if (!userExists.isVerified) {
+        const otp = otpGenerator.generate(6, {
+          digits: true,
+          alphabets: false,
+          upperCaseAlphabets: false,
+          specialChars: false,
+        });
+
+        userExists.otp = otp;
+        userExists.otpExpiry = Date.now() + 10 * 60 * 1000;
+        await userExists.save();
+        try {
+          sendEmail(email, "Verify your account", `Your OTP is ${otp}`);
+        } catch (error) {
+          console.log("EMAIL ERROR:", error.message);
+        }
+        return res.json({ success: true, message: "OTP resent" });
+      }
+
+      return res.json({ success: false, message: "User already exists" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    //  Generate OTP
     const otp = otpGenerator.generate(6, {
       digits: true,
       alphabets: false,
       upperCaseAlphabets: false,
-      specialChars: false
+      specialChars: false,
     });
-
-    userExists.otp = otp;
-    userExists.otpExpiry = Date.now() + 10 * 60 * 1000;
-    await userExists.save();
-    try{
-     sendEmail(email, "Verify your account", `Your OTP is ${otp}`);
-    }catch (error) {
-  console.log("EMAIL ERROR:", error.message);
-}
-    return res.json({ success: true, message: "OTP resent" });
-  }
-
-  return res.json({ success: false, message: "User already exists" });
-}
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // 🔥 Generate OTP
-    const otp = otpGenerator.generate(6, {
-  digits: true,
-  alphabets: false,
-  upperCaseAlphabets: false,
-  specialChars: false
-});
 
     const user = await User.create({
       name,
@@ -63,13 +63,13 @@ export const registerUser = async (req, res) => {
       isVerified: false,
     });
 
-    // 🔥 Send email
-    
+    //  Send email
+
     try {
-   sendEmail(
-    email,
-  "🔐 Verify Your Account - Car Rental",
-  `
+      sendEmail(
+        email,
+        "🔐 Verify Your Account - Car Rental",
+        `
   <div style="background:#f4f6f8; padding:30px; font-family:Arial, sans-serif;">
     
     <div style="max-width:500px; margin:auto; background:white; border-radius:12px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
@@ -109,17 +109,17 @@ export const registerUser = async (req, res) => {
     </div>
 
   </div>
-  `
-);} catch (error) {
-  console.log("EMAIL ERROR:", error.message);
-}
+  `,
+      );
+    } catch (error) {
+      console.log("EMAIL ERROR:", error.message);
+    }
 
     res.json({ success: true, message: "OTP sent to email" });
-
   } catch (error) {
-  console.log("REGISTER ERROR:", error);   // 🔥 ADD THIS
-  res.status(500).json({ success: false, message: error.message });
-}
+    console.log("REGISTER ERROR:", error); 
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 export const toggleWishlist = async (req, res) => {
   try {
@@ -138,7 +138,6 @@ export const toggleWishlist = async (req, res) => {
     await user.save();
 
     res.json({ success: true, wishlist: user.wishlist });
-
   } catch (error) {
     res.json({ success: false, message: error.message });
   }
@@ -150,7 +149,7 @@ export const verifyOtp = async (req, res) => {
 
     const user = await User.findOne({ email });
 
-   if (!user || user.otp !== String(otp)) {
+    if (!user || user.otp !== String(otp)) {
       return res.json({ success: false, message: "Invalid OTP" });
     }
 
@@ -167,46 +166,47 @@ export const verifyOtp = async (req, res) => {
     const token = generateToken(user._id.toString());
 
     res.json({ success: true, token });
-
   } catch (error) {
     res.json({ success: false, message: error.message });
   }
 };
 
 //Login User
-export const loginUser=async(req,res)=>{
-    try{
-    const {email,password}=req.body
-   const user = await User.findOne({ email });
+export const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
 
-if (!user) {
-  return res.json({ success: false, message: "User not found" });
-}
+    if (!user) {
+      return res.json({ success: false, message: "User not found" });
+    }
 
-if (!user.isVerified) {
-  return res.json({ success: false, message: "Please verify your email first" });
-}
-    const isMatch=await bcrypt.compare(password,user.password)
-    if(!isMatch){
-           return res.json({success:false,message:"Invalid Credentials"})
+    if (!user.isVerified) {
+      return res.json({
+        success: false,
+        message: "Please verify your email first",
+      });
     }
-    const token =generateToken(user._id.toString())
-     res.json({success:true,token})
-    }catch(error){
-       console.log(error.message);
-     res.json({success:false, message:error.message})
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.json({ success: false, message: "Invalid Credentials" });
     }
-}
+    const token = generateToken(user._id.toString());
+    res.json({ success: true, token });
+  } catch (error) {
+    console.log(error.message);
+    res.json({ success: false, message: error.message });
+  }
+};
 //Get User data using Token (JWT)
 export const getUserData = async (req, res) => {
   try {
     let user = await User.findById(req.user._id).populate("wishlist");
 
     // ✅ REMOVE NULL VALUES
-    user.wishlist = user.wishlist.filter(car => car !== null);
+    user.wishlist = user.wishlist.filter((car) => car !== null);
 
     res.json({ success: true, user });
-
   } catch (error) {
     console.log(error.message);
     res.json({ success: false, message: error.message });
@@ -214,18 +214,15 @@ export const getUserData = async (req, res) => {
 };
 
 //Get All Cars for the frontend
-export const getCars=async (req,res)=>{
-    try{
-        const cars=await Car.find({isAvailable:true})
-        res.json({success:true,cars})
-    }catch(error){
-        console.log(error.message);
-        res.json({success:false,message:error.message})
-    }
-}
-
-
-
+export const getCars = async (req, res) => {
+  try {
+    const cars = await Car.find({ isAvailable: true });
+    res.json({ success: true, cars });
+  } catch (error) {
+    console.log(error.message);
+    res.json({ success: false, message: error.message });
+  }
+};
 
 export const forgotPassword = async (req, res) => {
   try {
@@ -248,24 +245,24 @@ export const forgotPassword = async (req, res) => {
     user.resetTokenExpiry = Date.now() + 10 * 60 * 1000;
 
     await user.save();
-     try{
-     sendEmail(
-      email,
-      "🔐 Reset Password OTP",
-      `
+    try {
+      sendEmail(
+        email,
+        "🔐 Reset Password OTP",
+        `
       <div style="text-align:center; font-family:Arial;">
         <h2>Reset Password</h2>
         <p>Your OTP is:</p>
         <h1 style="color:#2d89ef;">${otp}</h1>
         <p>Valid for 30 seconds</p>
       </div>
-      `
-    );} catch (error) {
-  console.log("EMAIL ERROR:", error.message);
-}
+      `,
+      );
+    } catch (error) {
+      console.log("EMAIL ERROR:", error.message);
+    }
 
     res.json({ success: true, message: "OTP sent to email" });
-
   } catch (error) {
     res.json({ success: false, message: error.message });
   }
@@ -305,9 +302,8 @@ export const resetPassword = async (req, res) => {
     res.json({
       success: true,
       message: "Password reset successful",
-      token
+      token,
     });
-
   } catch (error) {
     res.json({ success: false, message: error.message });
   }
@@ -326,7 +322,7 @@ export const resendOtp = async (req, res) => {
       return res.json({ success: false, message: "User already verified" });
     }
 
-    // 🔥 generate new OTP
+    
     const otp = otpGenerator.generate(6, {
       digits: true,
       alphabets: false,
@@ -339,27 +335,24 @@ export const resendOtp = async (req, res) => {
 
     await user.save();
 
-    // 🔥 send email
-    try{
-     sendEmail(
-      email,
-      "🔐 New OTP - Car Rental",
-      `
+   
+    try {
+      sendEmail(
+        email,
+        "🔐 New OTP - Car Rental",
+        `
       <div style="padding:20px; font-family:Arial;">
         <h2>New OTP</h2>
         <h1 style="color:#2d89ef;">${otp}</h1>
         <p>Valid for 30 seconds</p>
       </div>
-      `
-    );
-} catch (error) {
-  console.log("EMAIL ERROR:", error.message);
-}
+      `,
+      );
+    } catch (error) {
+      console.log("EMAIL ERROR:", error.message);
+    }
     res.json({ success: true, message: "OTP resent successfully" });
-
   } catch (error) {
     res.json({ success: false, message: error.message });
   }
-  
-  
 };

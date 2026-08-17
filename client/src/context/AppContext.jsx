@@ -5,8 +5,8 @@ import { useNavigate } from "react-router-dom";
 
 window.axios = axios;
 axios.defaults.baseURL = import.meta.env.VITE_API_URL;
-axios.defaults.timeout = 60000;   // ⏳ FIX timeout (VERY IMPORTANT)
-  // 🔥 FIX CORS credentials
+axios.defaults.timeout = 60000;  
+
 export const AppContext = createContext();
 axios.interceptors.request.use(
   (config) => {
@@ -26,7 +26,7 @@ axios.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
 
-      const url = error.config?.url || ""; // ✅ SAFE ACCESS
+      const url = error.config?.url || ""; 
 
       const publicRoutes = [
         "/api/user/cars",
@@ -37,7 +37,7 @@ axios.interceptors.response.use(
         url.includes(route)
       );
 
-      // ✅ Public APIs → silent
+      
       if (isPublic) {
         if (error.code === "ECONNABORTED") {
   toast.error("Server is slow, try again");
@@ -51,7 +51,7 @@ if (error.message === "Network Error") {
         return Promise.reject(error);
       }
 
-      // ✅ Prevent multiple toasts spam
+     
       if (!window.__authToastShown) {
         toast.error("Please login to continue");
         window.__authToastShown = true;
@@ -77,7 +77,7 @@ export const AppProvider = ({ children }) => {
   const [cars, setCars] = useState([]);
   const [wishlist, setWishlist] = useState([]);
 
-  // ✅ Fetch logged-in user safely
+ 
   const fetchUser = async () => {
   try {
     const { data } = await axios.get("/api/user/data");
@@ -126,8 +126,8 @@ export const AppProvider = ({ children }) => {
   setIsOwner(false);
   delete axios.defaults.headers.common["Authorization"];
 
-  toast.success("Logged out successfully");   // ✅ ADD THIS
-  navigate("/");                              // ✅ OPTIONAL (better UX)
+  toast.success("Logged out successfully");   
+  navigate("/");                              
 };
 
   // Load token from localStorage
@@ -141,7 +141,7 @@ export const AppProvider = ({ children }) => {
   const init = async () => {
     if (token) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-      await fetchUser();   // 🔥 FIX HERE
+      await fetchUser();  
        
     } else {
       delete axios.defaults.headers.common["Authorization"];
